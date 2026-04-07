@@ -1,32 +1,41 @@
 package com.epq.epqbackend.controller;
 
-import com.epq.epqbackend.dto.ReporteDto;
 import com.epq.epqbackend.dto.ReporteRequestDto;
+import com.epq.epqbackend.service.ReporteService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/reportes")
+@CrossOrigin(origins = "*")
 public class ReporteController {
 
+    @Autowired
+    private ReporteService reporteService;
+
     @PostMapping("/generar")
-    public ResponseEntity<ReporteDto> generarReporte(
+    public ResponseEntity<byte[]> generarReporte(
             @RequestBody ReporteRequestDto requestDto) {
 
-        ReporteDto reporte = new ReporteDto();
-        reporte.setTipoReporte(requestDto.getTipoReporte());
-        reporte.setTipoArchivo(requestDto.getTipoArchivo());
+        byte[] archivo = reporteService.generarReporte(
+                requestDto.getNombreArchivo(),
+                requestDto.getTipoFuente(),
+                requestDto.getFechaInicio(),
+                requestDto.getFechaFin(),
+                requestDto.getMunicipio(),
+                requestDto.getTipoReporte(),
+                requestDto.getTipoArchivo()
+        );
 
-        return ResponseEntity.ok(reporte);
-    }
-
-    @GetMapping("/descargar/pdf/{id}")
-    public ResponseEntity<byte[]> descargarPdf(@PathVariable Long id) {
-        return ResponseEntity.ok(new byte[0]);
-    }
-
-    @GetMapping("/descargar/excel/{id}")
-    public ResponseEntity<byte[]> descargarExcel(@PathVariable Long id) {
-        return ResponseEntity.ok(new byte[0]);
+        return ResponseEntity.ok()
+                .header("Content-Disposition",
+                        "attachment; filename=reporte." + requestDto.getTipoArchivo())
+                .header("Content-Type",
+                        requestDto.getTipoArchivo().equalsIgnoreCase("pdf")
+                                ? "application/pdf"
+                                : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .body(archivo);
     }
 }

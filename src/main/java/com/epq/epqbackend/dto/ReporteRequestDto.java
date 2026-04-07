@@ -10,8 +10,8 @@ public class ReporteRequestDto {
     private LocalDate fechaFin;
     private String tipoReporte;
     private String tipoArchivo;
-
-    // GETTERS Y SETTERS
+    private String nombreArchivo;
+    private String tipoFuente; // base o extra
 
     public String getMunicipio() {
         return municipio;
@@ -59,5 +59,21 @@ public class ReporteRequestDto {
 
     public void setTipoArchivo(String tipoArchivo) {
         this.tipoArchivo = tipoArchivo;
+    }
+
+    public String getNombreArchivo() {
+        return nombreArchivo;
+    }
+
+    public void setNombreArchivo(String nombreArchivo) {
+        this.nombreArchivo = nombreArchivo;
+    }
+
+    public String getTipoFuente() {
+        return tipoFuente;
+    }
+
+    public void setTipoFuente(String tipoFuente) {
+        this.tipoFuente = tipoFuente;
     }
 }
