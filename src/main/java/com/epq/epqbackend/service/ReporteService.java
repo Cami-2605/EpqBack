@@ -17,7 +17,6 @@ import com.lowagie.text.pdf.PdfWriter;
 
 @Service
 public class ReporteService {
-
     @Autowired
     private ExcelService excelService;
 
@@ -31,7 +30,6 @@ public class ReporteService {
             String formato
     ) {
 
-        // 🔥 VALIDACIONES (MUY IMPORTANTES)
         if (nombreArchivo == null || nombreArchivo.isEmpty()) {
             throw new RuntimeException("Debe seleccionar un archivo");
         }
@@ -44,10 +42,8 @@ public class ReporteService {
             throw new RuntimeException("Debe seleccionar un tipo de reporte");
         }
 
-        // 🔹 Leer Excel
         List<Map<String, String>> data = excelService.leerExcel(nombreArchivo, tipoFuente);
 
-        // 🔹 Filtrar
         List<Map<String, String>> filtrado = data.stream()
 
                 .filter(d -> d.get("municipio") != null &&
@@ -68,8 +64,6 @@ public class ReporteService {
 
                     r.put("municipio", d.getOrDefault("municipio", ""));
                     r.put("fecha", d.getOrDefault("fecha", ""));
-
-                    // 🔥 dinámico según columna
                     r.put("valor", d.getOrDefault(tipoReporte.toLowerCase(), "0"));
 
                     return r;
@@ -77,12 +71,10 @@ public class ReporteService {
 
                 .collect(Collectors.toList());
 
-        // 🔥 VALIDACIÓN SI NO HAY DATOS
         if (filtrado.isEmpty()) {
             throw new RuntimeException("No hay datos para los filtros seleccionados");
         }
 
-        // 🔹 Generar archivo
         if (formato != null && formato.equalsIgnoreCase("pdf")) {
             return generarPdf(filtrado);
         } else {
@@ -90,7 +82,7 @@ public class ReporteService {
         }
     }
 
-    // ================= EXCEL =================
+    // = EXCEL =
 
     private byte[] generarExcel(List<Map<String, String>> data) {
 
@@ -98,7 +90,6 @@ public class ReporteService {
 
             Sheet sheet = workbook.createSheet("Reporte");
 
-            // 🔹 Header con estilo simple
             Row header = sheet.createRow(0);
             header.createCell(0).setCellValue("Municipio");
             header.createCell(1).setCellValue("Fecha");
@@ -115,7 +106,6 @@ public class ReporteService {
                 row.createCell(2).setCellValue(d.get("valor"));
             }
 
-            // 🔥 Ajustar columnas automáticamente
             sheet.autoSizeColumn(0);
             sheet.autoSizeColumn(1);
             sheet.autoSizeColumn(2);
@@ -130,7 +120,7 @@ public class ReporteService {
         }
     }
 
-    // ================= PDF =================
+    // = PDF =
 
     private byte[] generarPdf(List<Map<String, String>> data) {
 

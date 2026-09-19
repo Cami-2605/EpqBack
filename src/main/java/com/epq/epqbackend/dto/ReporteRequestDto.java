@@ -11,7 +11,7 @@ public class ReporteRequestDto {
     private String tipoReporte;
     private String tipoArchivo;
     private String nombreArchivo;
-    private String tipoFuente; // base o extra
+    private String tipoFuente;
 
     public String getMunicipio() {
         return municipio;
