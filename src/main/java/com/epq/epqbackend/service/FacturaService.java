@@ -186,17 +186,22 @@ public class FacturaService {
         List<Map<String, Object>> resultado = new ArrayList<>();
         for (Object[] row : rows) {
             Map<String, Object> fila = new LinkedHashMap<>();
-            fila.put("municipio",         row[0]);
-            fila.put("estrato",           row[1]);
-            fila.put("direccionServicio", row[2]);
-            fila.put("barrio",            row[3]);
-            fila.put("numeroContrato",    row[4]);
-            fila.put("valorFactura",      row[5]);
-            fila.put("valorMora",         row[6]);
-            fila.put("saldoMora",         row[7]);
-            fila.put("totalPagar",        row[8]);
-            fila.put("estadoPago",        row[9]);
-            fila.put("mesReferencia",     row[10]);
+            fila.put("codigoCliente",     row[0]);
+            fila.put("nombreCliente",     row[1]);
+            fila.put("municipio",         row[2]);
+            fila.put("estrato",           row[3]);
+            fila.put("direccionServicio", row[4]);
+            fila.put("barrio",            row[5]);
+            fila.put("numeroMedidor",     row[6]);
+            fila.put("numeroContrato",    row[7]);
+            fila.put("nombreServicio",    row[8]);
+            fila.put("valorFactura",      row[9]);
+            fila.put("valorMora",         row[10]);
+            fila.put("saldoMora",         row[11]);
+            fila.put("totalPagar",        row[12]);
+            fila.put("estadoPago",        row[13]);
+            fila.put("mesReferencia",     row[14]);
+            fila.put("mesesMora",         row[15]);
             resultado.add(fila);
         }
         return resultado;

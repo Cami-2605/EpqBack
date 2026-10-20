@@ -60,7 +60,8 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
     /** Solo morosos, con los mismos filtros opcionales. */
     @Query("SELECT f FROM Factura f WHERE " +
-            "(f.valorMora > 0 OR f.saldoMora > 0 OR f.estadoPago = 'VENCIDO') AND " +
+            "(f.valorMora > 0 OR f.saldoMora > 0 OR f.estadoPago = 'VENCIDO' " +
+            " OR (f.mesesMora IS NOT NULL AND f.mesesMora > 0)) AND " +
             "(:inicio      IS NULL OR f.fechaFactura >= :inicio) AND " +
             "(:fin         IS NULL OR f.fechaFactura <= :fin) AND " +
             "(:municipios  IS NULL OR f.municipio IN :municipios) AND " +
@@ -170,9 +171,11 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             @Param("estratos")   List<Integer> estratos,
             @Param("archivos")   List<String> archivos);
 
-    /** Detalle de vivienda con todos los campos relevantes. */
-    @Query("SELECT f.municipio, f.estrato, f.direccionServicio, f.barrio, f.numeroContrato, " +
-            "f.valorFactura, f.valorMora, f.saldoMora, f.totalPagar, f.estadoPago, f.mesReferencia " +
+    /** Detalle de vivienda con todos los campos relevantes, incluyendo cliente. */
+    @Query("SELECT f.codigoCliente, f.nombreCliente, f.municipio, f.estrato, " +
+            "f.direccionServicio, f.barrio, f.numeroMedidor, f.numeroContrato, " +
+            "f.nombreServicio, f.valorFactura, f.valorMora, f.saldoMora, " +
+            "f.totalPagar, f.estadoPago, f.mesReferencia, f.mesesMora " +
             "FROM Factura f WHERE " +
             "(:inicio     IS NULL OR f.fechaFactura >= :inicio) AND " +
             "(:fin        IS NULL OR f.fechaFactura <= :fin) AND " +
@@ -207,4 +210,145 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             @Param("inicio")     LocalDate inicio,
             @Param("fin")        LocalDate fin,
             @Param("municipios") List<String> municipios);
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // QUERIES PARA INFORMES ANALÍTICOS
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Top N morosos ordenados por meses de mora DESC, luego por saldo DESC.
+     * Devuelve: codigoCliente, nombreCliente, municipio, estrato,
+     *           direccionServicio, mesesMora, valorMora, saldoMora, totalPagar, nombreServicio
+     */
+    @Query("SELECT f.codigoCliente, f.nombreCliente, f.municipio, f.estrato, " +
+            "f.direccionServicio, f.mesesMora, f.valorMora, f.saldoMora, " +
+            "f.totalPagar, f.nombreServicio " +
+            "FROM Factura f WHERE " +
+            "(f.mesesMora IS NOT NULL AND f.mesesMora > 0 OR f.saldoMora > 0 OR f.valorMora > 0) AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:estratos   IS NULL OR f.estrato IN :estratos) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "ORDER BY f.mesesMora DESC NULLS LAST, f.saldoMora DESC NULLS LAST")
+    List<Object[]> findTopMorosos(
+            @Param("municipios") List<String> municipios,
+            @Param("estratos")   List<Integer> estratos,
+            @Param("archivos")   List<String> archivos);
+
+    /**
+     * Distribución de morosos por rango de meses de mora (edad de mora).
+     * Devuelve: rangoMeses (etiqueta), cantidad, sumaSaldo
+     * Los rangos se calculan en memoria en el servicio.
+     */
+    @Query("SELECT f.mesesMora, COUNT(f), SUM(f.saldoMora), SUM(f.valorMora) " +
+            "FROM Factura f WHERE " +
+            "f.mesesMora IS NOT NULL AND f.mesesMora > 0 AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "GROUP BY f.mesesMora ORDER BY f.mesesMora")
+    List<Object[]> findDistribucionEdadMora(
+            @Param("municipios") List<String> municipios,
+            @Param("archivos")   List<String> archivos);
+
+    /**
+     * Recaudo general: total recaudado agrupado por mes, municipio y servicio.
+     * Devuelve: mesReferencia, municipio, nombreServicio, totalPagar, conteo
+     */
+    @Query("SELECT f.mesReferencia, f.municipio, f.nombreServicio, " +
+            "SUM(f.totalPagar), COUNT(f) " +
+            "FROM Factura f WHERE " +
+            "(:inicio     IS NULL OR f.fechaFactura >= :inicio) AND " +
+            "(:fin        IS NULL OR f.fechaFactura <= :fin) AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "GROUP BY f.mesReferencia, f.municipio, f.nombreServicio " +
+            "ORDER BY f.mesReferencia, f.municipio")
+    List<Object[]> findRecaudoGeneral(
+            @Param("inicio")     LocalDate inicio,
+            @Param("fin")        LocalDate fin,
+            @Param("municipios") List<String> municipios,
+            @Param("archivos")   List<String> archivos);
+
+    /**
+     * Recaudo por servicio (gas vs agua u otros).
+     * Devuelve: nombreServicio, totalPagar, conteo, totalMora
+     */
+    @Query("SELECT f.nombreServicio, SUM(f.totalPagar), COUNT(f), SUM(f.valorMora) " +
+            "FROM Factura f WHERE " +
+            "(:inicio     IS NULL OR f.fechaFactura >= :inicio) AND " +
+            "(:fin        IS NULL OR f.fechaFactura <= :fin) AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "GROUP BY f.nombreServicio ORDER BY SUM(f.totalPagar) DESC")
+    List<Object[]> findRecaudoPorServicio(
+            @Param("inicio")     LocalDate inicio,
+            @Param("fin")        LocalDate fin,
+            @Param("municipios") List<String> municipios,
+            @Param("archivos")   List<String> archivos);
+
+    /**
+     * Recaudo diario: suma por fecha de factura.
+     * Devuelve: fechaFactura, totalPagar, conteo
+     */
+    @Query("SELECT f.fechaFactura, SUM(f.totalPagar), COUNT(f) " +
+            "FROM Factura f WHERE " +
+            "(:inicio     IS NULL OR f.fechaFactura >= :inicio) AND " +
+            "(:fin        IS NULL OR f.fechaFactura <= :fin) AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "GROUP BY f.fechaFactura ORDER BY f.fechaFactura")
+    List<Object[]> findRecaudoDiario(
+            @Param("inicio")     LocalDate inicio,
+            @Param("fin")        LocalDate fin,
+            @Param("municipios") List<String> municipios,
+            @Param("archivos")   List<String> archivos);
+
+    /**
+     * Top morosos por estrato: para cada estrato devuelve los N con más saldo.
+     * Devuelve: estrato, codigoCliente, nombreCliente, municipio,
+     *           mesesMora, saldoMora, totalPagar
+     */
+    @Query("SELECT f.estrato, f.codigoCliente, f.nombreCliente, f.municipio, " +
+            "f.mesesMora, f.saldoMora, f.totalPagar " +
+            "FROM Factura f WHERE " +
+            "f.estrato IS NOT NULL AND " +
+            "(f.mesesMora > 0 OR f.saldoMora > 0 OR f.valorMora > 0) AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "ORDER BY f.estrato, f.saldoMora DESC NULLS LAST, f.mesesMora DESC NULLS LAST")
+    List<Object[]> findMorososPorEstrato(
+            @Param("municipios") List<String> municipios,
+            @Param("archivos")   List<String> archivos);
+
+    /**
+     * Resumen de pagos por estrato: sumatoria total, mora, conteo.
+     * Devuelve: estrato, totalPagar, totalMora, totalSaldo, conteo
+     */
+    @Query("SELECT f.estrato, SUM(f.totalPagar), SUM(f.valorMora), " +
+            "SUM(f.saldoMora), COUNT(f) " +
+            "FROM Factura f WHERE " +
+            "f.estrato IS NOT NULL AND " +
+            "(:inicio     IS NULL OR f.fechaFactura >= :inicio) AND " +
+            "(:fin        IS NULL OR f.fechaFactura <= :fin) AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "GROUP BY f.estrato ORDER BY f.estrato")
+    List<Object[]> findResumenPorEstrato(
+            @Param("inicio")     LocalDate inicio,
+            @Param("fin")        LocalDate fin,
+            @Param("municipios") List<String> municipios,
+            @Param("archivos")   List<String> archivos);
+
+    /**
+     * Datos brutos para cálculo de promedio y proyección por mes.
+     * Devuelve: mesReferencia, totalPagar, conteo
+     */
+    @Query("SELECT f.mesReferencia, SUM(f.totalPagar), COUNT(f) " +
+            "FROM Factura f WHERE " +
+            "f.mesReferencia IS NOT NULL AND " +
+            "(:municipios IS NULL OR f.municipio IN :municipios) AND " +
+            "(:archivos   IS NULL OR f.nombreArchivoOrigen IN :archivos) " +
+            "GROUP BY f.mesReferencia ORDER BY f.mesReferencia")
+    List<Object[]> findDatosProyeccion(
+            @Param("municipios") List<String> municipios,
+            @Param("archivos")   List<String> archivos);
 }

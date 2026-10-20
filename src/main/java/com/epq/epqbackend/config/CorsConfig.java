@@ -1,18 +1,10 @@
 package com.epq.epqbackend.config;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-@Configuration
-public class CorsConfig implements WebMvcConfigurer {
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:4200")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
+/**
+ * La configuración CORS está centralizada en SecurityConfig (corsConfigurationSource()).
+ * Esta clase se mantiene vacía para no romper el paquete.
+ * Los orígenes permitidos se configuran en application.yaml bajo cors.allowed-origins.
+ */
+public class CorsConfig {
+    // Vacía intencionalmente — ver SecurityConfig.corsConfigurationSource()
 }

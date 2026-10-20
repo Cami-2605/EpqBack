@@ -347,9 +347,13 @@ public class ReporteGeneradorService {
                         Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
 
-        String[] cols = {"Municipio", "Estrato", "Detalle Vivienda", "Barrio",
-                         "N° Contrato", "Período", "Valor Factura",
-                         "Valor Mora", "Saldo Mora", "Total a Pagar", "Estado"};
+        String[] cols = {
+                "Código", "Nombre Cliente", "Municipio", "Estrato",
+                "Dirección", "N° Medidor", "N° Contrato", "Servicio",
+                "Período", "Meses Mora",
+                "Valor Factura", "Valor Mora", "Saldo Mora",
+                "Total a Pagar", "Estado"
+        };
         int row = 0;
         crearFilaTitulo(sheet, wb,
                 "DEUDORES MOROSOS (" + morosos.size() + " registros)", cols.length, row++);
@@ -360,17 +364,23 @@ public class ReporteGeneradorService {
 
         for (Factura f : morosos) {
             Row r = sheet.createRow(row++);
-            crearCelda(r, 0,  f.getMunicipio(), morosoSt);
-            crearCelda(r, 1,  f.getEstrato() != null ? "Estrato " + f.getEstrato() : "N/A", null);
-            crearCelda(r, 2,  nvl(f.getDireccionServicio()), null);
-            crearCelda(r, 3,  nvl(f.getBarrio()), null);
-            crearCelda(r, 4,  nvl(f.getNumeroContrato()), null);
-            crearCelda(r, 5,  nvl(f.getMesReferencia()), null);
-            crearCeldaNum(r, 6,  bd(f.getValorFactura()), moneySt);
-            crearCeldaNum(r, 7,  bd(f.getValorMora()), moneySt);
-            crearCeldaNum(r, 8,  bd(f.getSaldoMora()), moneySt);
-            crearCeldaNum(r, 9,  bd(f.getTotalPagar()), moneySt);
-            crearCelda(r, 10, nvl(f.getEstadoPago()), null);
+            crearCelda   (r,  0, nvl(f.getCodigoCliente()),                    morosoSt);
+            crearCelda   (r,  1, nvl(f.getNombreCliente()),                    null);
+            crearCelda   (r,  2, f.getMunicipio(),                             null);
+            crearCelda   (r,  3, f.getEstrato() != null
+                                 ? "Estrato " + f.getEstrato() : "N/A",        null);
+            crearCelda   (r,  4, nvl(f.getDireccionServicio()),                null);
+            crearCelda   (r,  5, nvl(f.getNumeroMedidor()),                    null);
+            crearCelda   (r,  6, nvl(f.getNumeroContrato()),                   null);
+            crearCelda   (r,  7, nvl(f.getNombreServicio()),                   null);
+            crearCelda   (r,  8, nvl(f.getMesReferencia()),                    null);
+            crearCeldaNum(r,  9, f.getMesesMora() != null
+                                 ? (double) f.getMesesMora() : 0, null);
+            crearCeldaNum(r, 10, bd(f.getValorFactura()),  moneySt);
+            crearCeldaNum(r, 11, bd(f.getValorMora()),     moneySt);
+            crearCeldaNum(r, 12, bd(f.getSaldoMora()),     moneySt);
+            crearCeldaNum(r, 13, bd(f.getTotalPagar()),    moneySt);
+            crearCelda   (r, 14, nvl(f.getEstadoPago()),                       null);
         }
 
         autoSize(sheet, cols.length);
@@ -384,10 +394,13 @@ public class ReporteGeneradorService {
         CellStyle moneySt  = estiloMoneda(wb);
         CellStyle parSt    = estiloFondoColor(wb, COLOR_FILA_PAR);
 
-        String[] cols = {"Municipio", "Estrato", "Dirección", "Barrio",
-                         "N° Contrato", "Servicio", "Período",
-                         "Valor Factura", "Valor Mora", "Saldo Mora",
-                         "Total a Pagar", "Estado"};
+        String[] cols = {
+                "Código", "Nombre Cliente", "Municipio", "Estrato",
+                "Dirección", "Barrio", "N° Medidor", "N° Contrato",
+                "Servicio", "Período",
+                "Valor Factura", "Valor Mora", "Saldo Mora",
+                "Total a Pagar", "Estado"
+        };
         int row = 0;
         crearFilaTitulo(sheet, wb, "DETALLE DE VIVIENDA", cols.length, row++);
         row++;
@@ -400,18 +413,22 @@ public class ReporteGeneradorService {
             Row r = sheet.createRow(row++);
             CellStyle rowSt = (idx++ % 2 == 0) ? null : parSt;
 
-            crearCelda(r, 0,  f.getMunicipio(), rowSt);
-            crearCelda(r, 1,  f.getEstrato() != null ? String.valueOf(f.getEstrato()) : "N/A", rowSt);
-            crearCelda(r, 2,  nvl(f.getDireccionServicio()), rowSt);
-            crearCelda(r, 3,  nvl(f.getBarrio()), rowSt);
-            crearCelda(r, 4,  nvl(f.getNumeroContrato()), rowSt);
-            crearCelda(r, 5,  nvl(f.getNombreServicio()), rowSt);
-            crearCelda(r, 6,  nvl(f.getMesReferencia()), rowSt);
-            crearCeldaNum(r, 7,  bd(f.getValorFactura()), moneySt);
-            crearCeldaNum(r, 8,  bd(f.getValorMora()), moneySt);
-            crearCeldaNum(r, 9,  bd(f.getSaldoMora()), moneySt);
-            crearCeldaNum(r, 10, bd(f.getTotalPagar()), moneySt);
-            crearCelda(r, 11, nvl(f.getEstadoPago()), rowSt);
+            crearCelda   (r,  0, nvl(f.getCodigoCliente()),                    rowSt);
+            crearCelda   (r,  1, nvl(f.getNombreCliente()),                    rowSt);
+            crearCelda   (r,  2, f.getMunicipio(),                             rowSt);
+            crearCelda   (r,  3, f.getEstrato() != null
+                                 ? String.valueOf(f.getEstrato()) : "N/A",     rowSt);
+            crearCelda   (r,  4, nvl(f.getDireccionServicio()),                rowSt);
+            crearCelda   (r,  5, nvl(f.getBarrio()),                           rowSt);
+            crearCelda   (r,  6, nvl(f.getNumeroMedidor()),                    rowSt);
+            crearCelda   (r,  7, nvl(f.getNumeroContrato()),                   rowSt);
+            crearCelda   (r,  8, nvl(f.getNombreServicio()),                   rowSt);
+            crearCelda   (r,  9, nvl(f.getMesReferencia()),                    rowSt);
+            crearCeldaNum(r, 10, bd(f.getValorFactura()),  moneySt);
+            crearCeldaNum(r, 11, bd(f.getValorMora()),     moneySt);
+            crearCeldaNum(r, 12, bd(f.getSaldoMora()),     moneySt);
+            crearCeldaNum(r, 13, bd(f.getTotalPagar()),    moneySt);
+            crearCelda   (r, 14, nvl(f.getEstadoPago()),                       rowSt);
         }
 
         autoSize(sheet, cols.length);
@@ -424,27 +441,38 @@ public class ReporteGeneradorService {
         CellStyle headerSt = estiloEncabezado(wb);
         CellStyle moneySt  = estiloMoneda(wb);
 
-        String[] cols = {"Municipio", "Estrato", "Período", "Fecha Factura",
-                         "Valor Factura", "Valor Mora", "Saldo Mora",
-                         "Total a Pagar", "Estado", "Dirección", "Barrio", "Contrato"};
+        String[] cols = {
+                "Código", "Nombre Cliente", "Municipio", "Estrato",
+                "Período", "Fecha Recaudo",
+                "Valor Factura", "Valor Mora", "Saldo Mora",
+                "Total a Pagar", "Meses Mora", "Estado",
+                "Dirección", "N° Medidor", "Contrato", "Servicio"
+        };
         int row = 0;
         Row hRow = sheet.createRow(row++);
         for (int i = 0; i < cols.length; i++) crearCelda(hRow, i, cols[i], headerSt);
 
         for (Factura f : facturas) {
             Row r = sheet.createRow(row++);
-            crearCelda(r, 0,  f.getMunicipio(), null);
-            crearCelda(r, 1,  f.getEstrato() != null ? String.valueOf(f.getEstrato()) : "N/A", null);
-            crearCelda(r, 2,  nvl(f.getMesReferencia()), null);
-            crearCelda(r, 3,  f.getFechaFactura() != null ? f.getFechaFactura().format(DATE_FORMATTER) : "", null);
-            crearCeldaNum(r, 4,  bd(f.getValorFactura()), moneySt);
-            crearCeldaNum(r, 5,  bd(f.getValorMora()), moneySt);
-            crearCeldaNum(r, 6,  bd(f.getSaldoMora()), moneySt);
-            crearCeldaNum(r, 7,  bd(f.getTotalPagar()), moneySt);
-            crearCelda(r, 8,  nvl(f.getEstadoPago()), null);
-            crearCelda(r, 9,  nvl(f.getDireccionServicio()), null);
-            crearCelda(r, 10, nvl(f.getBarrio()), null);
-            crearCelda(r, 11, nvl(f.getNumeroContrato()), null);
+            crearCelda   (r,  0, nvl(f.getCodigoCliente()),  null);
+            crearCelda   (r,  1, nvl(f.getNombreCliente()),  null);
+            crearCelda   (r,  2, f.getMunicipio(),            null);
+            crearCelda   (r,  3, f.getEstrato() != null
+                                 ? String.valueOf(f.getEstrato()) : "N/A", null);
+            crearCelda   (r,  4, nvl(f.getMesReferencia()),  null);
+            crearCelda   (r,  5, f.getFechaFactura() != null
+                                 ? f.getFechaFactura().format(DATE_FORMATTER) : "", null);
+            crearCeldaNum(r,  6, bd(f.getValorFactura()),    moneySt);
+            crearCeldaNum(r,  7, bd(f.getValorMora()),       moneySt);
+            crearCeldaNum(r,  8, bd(f.getSaldoMora()),       moneySt);
+            crearCeldaNum(r,  9, bd(f.getTotalPagar()),      moneySt);
+            crearCeldaNum(r, 10, f.getMesesMora() != null
+                                 ? (double) f.getMesesMora() : 0, null);
+            crearCelda   (r, 11, nvl(f.getEstadoPago()),     null);
+            crearCelda   (r, 12, nvl(f.getDireccionServicio()), null);
+            crearCelda   (r, 13, nvl(f.getNumeroMedidor()),  null);
+            crearCelda   (r, 14, nvl(f.getNumeroContrato()), null);
+            crearCelda   (r, 15, nvl(f.getNombreServicio()), null);
         }
 
         autoSize(sheet, cols.length);
@@ -663,21 +691,26 @@ public class ReporteGeneradorService {
 
         agregarTituloPdf(doc, "DEUDORES MOROSOS (" + morosos.size() + " registros)");
 
-        PdfPTable table = new PdfPTable(7);
+        PdfPTable table = new PdfPTable(9);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{15, 8, 20, 12, 15, 15, 10});
+        table.setWidths(new float[]{8, 20, 12, 8, 18, 14, 14, 8, 10});
 
-        String[] headers = {"Municipio", "Estrato", "Dirección", "Período",
-                            "Valor Mora", "Saldo Mora", "Estado"};
+        String[] headers = {
+                "Código", "Nombre", "Municipio", "Estrato",
+                "Dirección", "Valor Mora", "Saldo Mora", "Meses Mora", "Estado"
+        };
         for (String h : headers) agregarCeldaHeaderPdf(table, h);
 
         for (Factura f : morosos) {
+            agregarCeldaMorosaPdf(table, nvl(f.getCodigoCliente()));
+            agregarCeldaMorosaPdf(table, nvl(f.getNombreCliente()));
             agregarCeldaMorosaPdf(table, f.getMunicipio());
             agregarCeldaMorosaPdf(table, f.getEstrato() != null ? "E" + f.getEstrato() : "-");
             agregarCeldaMorosaPdf(table, nvl(f.getDireccionServicio()));
-            agregarCeldaMorosaPdf(table, nvl(f.getMesReferencia()));
             agregarCeldaMorosaPdf(table, formatMoney(f.getValorMora()));
             agregarCeldaMorosaPdf(table, formatMoney(f.getSaldoMora()));
+            agregarCeldaMorosaPdf(table, f.getMesesMora() != null
+                    ? String.valueOf(f.getMesesMora()) : "-");
             agregarCeldaMorosaPdf(table, nvl(f.getEstadoPago()));
         }
         doc.add(table);
@@ -686,19 +719,22 @@ public class ReporteGeneradorService {
     private void agregarSeccionDetallePdf(Document doc, List<Factura> facturas) throws Exception {
         agregarTituloPdf(doc, "DETALLE DE VIVIENDA");
 
-        PdfPTable table = new PdfPTable(6);
+        PdfPTable table = new PdfPTable(7);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{15, 8, 20, 12, 15, 15});
+        table.setWidths(new float[]{8, 20, 12, 8, 18, 15, 15});
 
-        String[] headers = {"Municipio", "Estrato", "Dirección", "Período",
-                            "Valor Factura", "Total a Pagar"};
+        String[] headers = {
+                "Código", "Nombre", "Municipio", "Estrato",
+                "Dirección", "Valor Factura", "Total a Pagar"
+        };
         for (String h : headers) agregarCeldaHeaderPdf(table, h);
 
         for (Factura f : facturas) {
+            table.addCell(nvl(f.getCodigoCliente()));
+            table.addCell(nvl(f.getNombreCliente()));
             table.addCell(nvl(f.getMunicipio()));
             table.addCell(f.getEstrato() != null ? String.valueOf(f.getEstrato()) : "-");
             table.addCell(nvl(f.getDireccionServicio()));
-            table.addCell(nvl(f.getMesReferencia()));
             table.addCell(formatMoney(f.getValorFactura()));
             table.addCell(formatMoney(f.getTotalPagar()));
         }
@@ -708,19 +744,22 @@ public class ReporteGeneradorService {
     private void agregarSeccionDatosPdf(Document doc, List<Factura> facturas) throws Exception {
         agregarTituloPdf(doc, "DATOS DE FACTURACIÓN");
 
-        PdfPTable table = new PdfPTable(6);
+        PdfPTable table = new PdfPTable(7);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{18, 8, 12, 20, 20, 12});
+        table.setWidths(new float[]{8, 18, 14, 8, 12, 18, 10});
 
-        String[] headers = {"Municipio", "Estrato", "Período",
-                            "Valor Factura", "Total a Pagar", "Estado"};
+        String[] headers = {
+                "Código", "Nombre", "Municipio", "Estrato",
+                "Período", "Total a Pagar", "Estado"
+        };
         for (String h : headers) agregarCeldaHeaderPdf(table, h);
 
         for (Factura f : facturas) {
+            table.addCell(nvl(f.getCodigoCliente()));
+            table.addCell(nvl(f.getNombreCliente()));
             table.addCell(nvl(f.getMunicipio()));
             table.addCell(f.getEstrato() != null ? String.valueOf(f.getEstrato()) : "-");
             table.addCell(nvl(f.getMesReferencia()));
-            table.addCell(formatMoney(f.getValorFactura()));
             table.addCell(formatMoney(f.getTotalPagar()));
             table.addCell(nvl(f.getEstadoPago()));
         }

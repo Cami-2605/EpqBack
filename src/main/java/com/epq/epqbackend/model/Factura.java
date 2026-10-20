@@ -19,6 +19,26 @@ public class Factura {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ── Identificación del cliente ─────────────────────────────
+    /** Código del cliente/usuario en el sistema */
+    @Column(name = "codigo_cliente", length = 50)
+    private String codigoCliente;
+
+    /** Nombre del cliente/usuario */
+    @Column(name = "nombre_cliente", length = 255)
+    private String nombreCliente;
+
+    /** Número de medidor (campo específico del Archivo 1) */
+    @Column(name = "numero_medidor", length = 50)
+    private String numeroMedidor;
+
+    /**
+     * Cantidad de meses en mora (campo MESES MORA / MESES DE MORA).
+     * Útil para reportes de cartera.
+     */
+    @Column(name = "meses_mora")
+    private Integer mesesMora;
+
     // ── Ubicación ──────────────────────────────────────────────
     @Column(nullable = false, length = 100)
     private String municipio;
@@ -108,6 +128,18 @@ public class Factura {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public String getCodigoCliente() { return codigoCliente; }
+    public void setCodigoCliente(String codigoCliente) { this.codigoCliente = codigoCliente; }
+
+    public String getNombreCliente() { return nombreCliente; }
+    public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+
+    public String getNumeroMedidor() { return numeroMedidor; }
+    public void setNumeroMedidor(String numeroMedidor) { this.numeroMedidor = numeroMedidor; }
+
+    public Integer getMesesMora() { return mesesMora; }
+    public void setMesesMora(Integer mesesMora) { this.mesesMora = mesesMora; }
+
     public String getMunicipio() { return municipio; }
     public void setMunicipio(String municipio) { this.municipio = municipio; }
 
@@ -166,8 +198,9 @@ public class Factura {
      * Indica si esta factura tiene deuda (mora o saldo pendiente).
      */
     public boolean tieneMora() {
-        return (valorMora != null && valorMora.compareTo(BigDecimal.ZERO) > 0)
+        return (valorMora  != null && valorMora.compareTo(BigDecimal.ZERO)  > 0)
                 || (saldoMora != null && saldoMora.compareTo(BigDecimal.ZERO) > 0)
+                || (mesesMora != null && mesesMora > 0)
                 || "VENCIDO".equals(estadoPago);
     }
 }

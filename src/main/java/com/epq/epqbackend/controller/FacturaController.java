@@ -73,26 +73,50 @@ public class FacturaController {
 
     /**
      * Carga un único archivo (Excel o PDF).
-     * Mantiene la firma anterior para compatibilidad con el frontend existente.
+     * Acepta el campo con nombre "archivo" o "file" para compatibilidad
+     * con distintas implementaciones del frontend.
      *
-     * @param archivo    archivo a cargar (multipart/form-data)
+     * @param archivo    campo "archivo" (nombre original del proyecto)
+     * @param file       campo "file" (alternativo, común en Angular/React)
      * @param tipo       "base" o "extra" (default: "extra")
      */
     @PostMapping("/cargar")
     public ResponseEntity<?> cargarArchivo(
-            @RequestParam("archivo") MultipartFile archivo,
-            @RequestParam(value = "tipo", defaultValue = "extra") String tipo) {
+            @RequestParam(value = "archivo", required = false) MultipartFile archivo,
+            @RequestParam(value = "file",    required = false) MultipartFile file,
+            @RequestParam(value = "tipo",    defaultValue = "extra") String tipo) {
+
+        // Aceptar cualquiera de los dos nombres de campo
+        MultipartFile archivoEfectivo = archivo != null ? archivo : file;
+
+        System.out.println("=== POST /facturas/cargar ===");
+        System.out.println("Parámetro 'archivo': " + (archivo  != null ? archivo.getOriginalFilename()  : "null"));
+        System.out.println("Parámetro 'file':    " + (file     != null ? file.getOriginalFilename()     : "null"));
+        System.out.println("Tipo de fuente:      " + tipo);
+
+        if (archivoEfectivo == null || archivoEfectivo.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiErrorDto("ERR_002",
+                            "No se recibió ningún archivo. " +
+                            "Verifique que el campo del formulario se llame 'archivo' o 'file'"));
+        }
+
+        System.out.println("Archivo recibido: " + archivoEfectivo.getOriginalFilename()
+                + " (" + archivoEfectivo.getSize() + " bytes)");
 
         try {
             ArchivoProcessorService.ResultadoCarga resultado =
-                    archivoProcessorService.procesarArchivos(List.of(archivo), tipo);
+                    archivoProcessorService.procesarArchivos(List.of(archivoEfectivo), tipo);
             return ResponseEntity.ok(resultado);
 
         } catch (EpqException e) {
+            System.err.println("EpqException en /cargar: " + e.getMessage() + " | " + e.getDetalle());
             return ResponseEntity.status(e.getHttpStatus())
                     .body(new ApiErrorDto(e.getErrorCode().getCodigo(),
                             e.getMessage(), e.getDetalle()));
         } catch (Exception e) {
+            System.err.println("Exception en /cargar: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiErrorDto("ERR_999", "Error procesando el archivo: " + e.getMessage()));
         }
