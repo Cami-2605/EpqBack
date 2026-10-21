@@ -18,6 +18,7 @@ public class ArchivoExcel {
     private String tipo;
     private Integer registrosProcesados = 0;
     private Integer registrosFallidos = 0;
+    @Column(columnDefinition = "TEXT")
     private String errores;
     private String estado;
 
