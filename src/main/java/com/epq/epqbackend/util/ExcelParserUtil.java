@@ -76,13 +76,24 @@ public final class ExcelParserUtil {
 
     /** Columnas que se interpretan como MUNICIPIO */
     private static final Set<String> COL_MUNICIPIO = Set.of(
-            "municipio"
+            "municipio",         // MUNICIPIO
+            "municipiociudad",   // MUNICIPIO_CIUDAD / MUNICIPIO CIUDAD
+            "ciudad",            // CIUDAD
+            "localidad",         // LOCALIDAD
+            "nombremunicipio"    // NOMBRE MUNICIPIO / NOMBRE_MUNICIPIO
     );
 
     /** Columnas que se interpretan como FECHA DE FACTURA / RECAUDO */
     private static final Set<String> COL_FECHA = Set.of(
-            "fecharecaudo", "fecha", "fechapago", "fechafactura",
-            "fechaemision", "fechacorte"
+            "fecharecaudo",   // FECHA RECAUDO / FECHA_RECAUDO
+            "fecha",          // FECHA
+            "fechapago",      // FECHA PAGO / FECHA_PAGO
+            "fechadepago",    // FECHA DE PAGO
+            "fechafactura",   // FECHA FACTURA / FECHA_FACTURA
+            "fechaemision",   // FECHA EMISION
+            "fechacorte",     // FECHA CORTE
+            "mes",            // MES
+            "periodo"         // PERIODO
     );
 
     /**
@@ -90,10 +101,12 @@ public final class ExcelParserUtil {
      * Se recorre en orden de prioridad: la primera que exista en el archivo gana.
      */
     private static final List<String> COL_VALOR_FACTURA_PRIORIDAD = List.of(
-            "valormes",    // Archivo 1: VALOR MES
-            "pagadomes",   // Archivo 2: PAGADO MES
-            "valorfactura",
-            "valor"        // último recurso
+            "valormes",      // VALOR MES / VALOR_MES
+            "pagadomes",     // PAGADO MES / PAGADO_MES
+            "valorfactura",  // VALOR FACTURA / VALOR_FACTURA
+            "importe",       // IMPORTE
+            "monto",         // MONTO
+            "valor"          // VALOR (último recurso)
     );
 
     /** Columnas que se interpretan como VALOR MORA */
@@ -113,10 +126,10 @@ public final class ExcelParserUtil {
 
     /** Columnas que se interpretan como VALOR TOTAL A PAGAR */
     private static final List<String> COL_TOTAL_PRIORIDAD = List.of(
-            "valortotal",  // Archivo 1: VALOR TOTAL
-            "valor",       // Archivo 2: VALOR (cuando no hay valormes)
-            "totalpagar",
-            "total"
+            "valortotal",  // VALOR TOTAL
+            "total",       // TOTAL
+            "totalpagar",  // TOTAL PAGAR
+            "valor"        // VALOR (cuando no hay valormes/pagadomes)
     );
 
     /** Columnas que se interpretan como ESTRATO */
@@ -476,8 +489,12 @@ public final class ExcelParserUtil {
                 String val = obtenerValorCeldaComoTexto(cell);
                 if (val == null) continue;
                 String norm = normalizarNombreColumna(val);
-                if (norm.equals("municipio") || norm.equals("codigo")
-                        || norm.equals("fecharecaudo") || norm.equals("fechapago")) {
+                if (norm.equals("municipio") || norm.equals("municipiociudad")
+                        || norm.equals("ciudad") || norm.equals("localidad")
+                        || norm.equals("nombremunicipio")
+                        || norm.equals("codigo")
+                        || norm.equals("fecharecaudo") || norm.equals("fechapago")
+                        || norm.equals("fechafactura") || norm.equals("fecha")) {
                     return i;
                 }
             }
