@@ -92,8 +92,7 @@ public final class ExcelParserUtil {
             "fechafactura",   // FECHA FACTURA / FECHA_FACTURA
             "fechaemision",   // FECHA EMISION
             "fechacorte",     // FECHA CORTE
-            "mes",            // MES
-            "periodo"         // PERIODO
+            "mes"             // MES
     );
 
     /**
@@ -161,9 +160,9 @@ public final class ExcelParserUtil {
     );
 
     /** Columnas que se interpretan como NÚMERO DE CONTRATO / DOCUMENTO */
-    private static final Set<String> COL_CONTRATO = Set.of(
-            "contrato", "documento", "numerodocumento", "nrocontrato",
-            "numerocontrato", "transaccion"
+    private static final List<String> COL_CONTRATO = List.of(
+            "contrato", "numerodocumento", "numerocontrato", "nrocontrato",
+            "documento", "transaccion"
     );
 
     /** Columnas que se interpretan como PERÍODO */
@@ -334,7 +333,7 @@ public final class ExcelParserUtil {
         idx.servicio     = primeroDeSet(col, COL_SERVICIO);
         idx.direccion    = primeroDeSet(col, COL_DIRECCION);
         idx.barrio       = primeroDeSet(col, COL_BARRIO);
-        idx.contrato     = primeroDeSet(col, COL_CONTRATO);
+        idx.contrato     = primero(col, COL_CONTRATO);
         idx.mesesMora    = primeroDeSet(col, COL_MESES_MORA);
         idx.medidor      = primeroDeSet(col, COL_MEDIDOR);
         idx.codigo       = primeroDeSet(col, COL_CODIGO);
